@@ -1,51 +1,61 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
+	"movielight/internal/db"
+	"movielight/internal/config"
 	"net/http"
 	"os"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
-
-type config struct {
-	port int
-	env string
-}
-
+// структура приложения
 type application struct {
-	config config
+	config config.Config
 	logger *slog.Logger
 }
 
 func main() {
-	var cfg config
-
-	flag.IntVar(&cfg.port, "port", 4550, "API server port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.Parse()
-
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
+	// загружаем конфиг
+	cfg, err := config.Load(logger)
+	if err != nil {
+		logger.Error("config load error", "err", err)
+		os.Exit(1)
+	}
+
+	// подключение к БД
+	database, err := db.Open(cfg.DB.DSN)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+	defer database.Close()
+
+	logger.Info("database connection pool established")
 
 	app := &application{
 		config: cfg,
 		logger: logger,
 	}
 
+	// сервер
 	srv := &http.Server{
-		Addr: fmt.Sprintf(":%d", cfg.port),
-		Handler: app.routes(),
-		IdleTimeout: time.Minute,
-		ReadTimeout: 5 * time.Second,
+		Addr:         fmt.Sprintf(":%d", cfg.Port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 
-	logger.Info("starting server:", "addr", srv.Addr, "env", cfg.env)
-	err := srv.ListenAndServe()
+	logger.Info("starting server", "addr", srv.Addr, "env", cfg.Env)
+
+	err = srv.ListenAndServe()
 	logger.Error(err.Error())
 	os.Exit(1)
 }
