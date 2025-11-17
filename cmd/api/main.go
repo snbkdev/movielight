@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"movielight/internal/config"
+	"movielight/internal/data"
 	"movielight/internal/db"
 	"net/http"
 	"os"
@@ -20,6 +21,7 @@ import (
 type application struct {
 	config config.Config
 	logger *slog.Logger
+	models data.Models
 }
 
 func main() {
@@ -65,6 +67,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(database),
 	}
 
 	// сервер
