@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -16,7 +17,12 @@ type DatabaseConfig struct {
 type Config struct {
 	Port int
 	Env  string
-	DB   DatabaseConfig
+	DB   struct {
+		Dsn string
+		MaxOpenConns int
+		MaxIdleConns int
+		MaxIdleTime time.Duration
+	}
 }
 
 // Load загружает конфигурацию из .env
@@ -45,8 +51,8 @@ func Load(logger *slog.Logger) (Config, error) {
 	}
 
 	// DB_DSN
-	cfg.DB.DSN = os.Getenv("DB_DSN")
-	if cfg.DB.DSN == "" {
+	cfg.DB.Dsn = os.Getenv("DB_DSN")
+	if cfg.DB.Dsn == "" {
 		fmt.Println("No database connection")
 	}
 

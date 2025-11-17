@@ -29,10 +29,10 @@ func main() {
 	}
 
 	// подключение к БД
-	database, err := db.Open(cfg.DB.DSN)
+	database, err := db.Open(cfg.DB.Dsn)
 	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
+    	logger.Error(err.Error())
+    	os.Exit(1)
 	}
 	defer database.Close()
 

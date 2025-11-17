@@ -1,1 +1,5 @@
 go get github.com/julienschmidt/httprouter@v1 - установка httprouter
+
+migrate create -seq -ext=.sql create_movies_table
+migrate create -seq -ext=.sql add_movies_check_contraints
+movielight % migrate -path=./migrations -database=$DB_DSN up
