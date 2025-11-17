@@ -3,12 +3,16 @@ package main
 import (
 	"fmt"
 	"log/slog"
-	"movielight/internal/db"
 	"movielight/internal/config"
+	"movielight/internal/db"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -37,6 +41,26 @@ func main() {
 	defer database.Close()
 
 	logger.Info("database connection pool established")
+
+	migrationDriver, err := postgres.WithInstance(database, &postgres.Config{})
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	migrator, err := migrate.NewWithDatabaseInstance("file:///Users/asanbeksamudin/Documents/projects/mine/golang/movielight/migrations", "postgres", migrationDriver)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	err = migrator.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	logger.Info("database migrations applied")
 
 	app := &application{
 		config: cfg,
