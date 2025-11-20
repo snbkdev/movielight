@@ -11,6 +11,8 @@ movielight % migrate -path=./migrations -database=$DB_DSN up
 Команда для внесения изменений
 migrate -path=./migrations -database="postgres://user:pass@localhost:5432/dbname?sslmode=disable" up
 
+source .env && migrate -path=./migrations -database=$DB_DSN up
+
 Команда для установки golang-migrate:
 go get github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
