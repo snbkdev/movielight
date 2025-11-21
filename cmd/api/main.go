@@ -70,6 +70,12 @@ func main() {
 		models: data.NewModels(database),
 	}
 
+	err = app.serve()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// сервер
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Port),
