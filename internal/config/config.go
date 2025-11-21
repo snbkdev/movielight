@@ -23,6 +23,11 @@ type Config struct {
 		MaxIdleConns int
 		MaxIdleTime time.Duration
 	}
+	Limiter struct {
+		RPS float64
+		Burst int
+		Enabled bool
+	}
 }
 
 // Load загружает конфигурацию из .env
