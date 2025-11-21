@@ -21,3 +21,6 @@ version = uuid_generate_v4()
 
 Установка rate
 go get golang.org/x/time/rate@latest
+
+Установка bcrypt
+go get golang.org/x/crypto/bcrypt@latest
