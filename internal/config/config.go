@@ -18,15 +18,22 @@ type Config struct {
 	Port int
 	Env  string
 	DB   struct {
-		Dsn string
+		Dsn         string
 		MaxOpenConns int
 		MaxIdleConns int
-		MaxIdleTime time.Duration
+		MaxIdleTime  time.Duration
 	}
 	Limiter struct {
-		RPS float64
-		Burst int
+		RPS     float64
+		Burst   int
 		Enabled bool
+	}
+	SMTP struct {
+		Host     string
+		Port     int
+		Username string
+		Password string
+		Sender   string
 	}
 }
 
@@ -60,6 +67,26 @@ func Load(logger *slog.Logger) (Config, error) {
 	if cfg.DB.Dsn == "" {
 		fmt.Println("No database connection")
 	}
+
+	// SMTP Configuration
+	cfg.SMTP.Host = os.Getenv("SMTP_HOST")
+	if cfg.SMTP.Host == "" {
+		cfg.SMTP.Host = "localhost" // значение по умолчанию
+	}
+
+	// SMTP Port
+	smtpPortStr := os.Getenv("SMTP_PORT")
+	if smtpPortStr == "" {
+		smtpPortStr = "587" // стандартный порт для SMTP
+	}
+	cfg.SMTP.Port, err = strconv.Atoi(smtpPortStr)
+	if err != nil {
+		return cfg, fmt.Errorf("invalid SMTP port: %w", err)
+	}
+
+	cfg.SMTP.Username = os.Getenv("SMTP_USERNAME")
+	cfg.SMTP.Password = os.Getenv("SMTP_PASSWORD")
+	cfg.SMTP.Sender = os.Getenv("SMTP_SENDER")
 
 	return cfg, nil
 }

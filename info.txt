@@ -24,3 +24,6 @@ go get golang.org/x/time/rate@latest
 
 Установка bcrypt
 go get golang.org/x/crypto/bcrypt@latest
+
+Установка go-mail/mail для отправки письма
+go get github.com/go-mail/mail/v2@v2

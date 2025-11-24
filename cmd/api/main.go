@@ -6,6 +6,7 @@ import (
 	"movielight/internal/config"
 	"movielight/internal/data"
 	"movielight/internal/db"
+	"movielight/internal/mailer"
 	"net/http"
 	"os"
 	"time"
@@ -22,6 +23,7 @@ type application struct {
 	config config.Config
 	logger *slog.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func main() {
@@ -68,6 +70,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(database),
+		mailer: mailer.New(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.Sender),
 	}
 
 	err = app.serve()
