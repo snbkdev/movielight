@@ -86,7 +86,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 }
 
 func (m UserModel) Insert(user *User) error {
-	query := `insert into users (name, email, password_hash, activated) values ($1, $2, $3, $4) returning id, cretaed_at, version`
+	query := `insert into users (name, email, password_hash, activated) values ($1, $2, $3, $4) returning id, created_at, version`
 
 	args := []any{user.Name, user.Email, user.Password.hash, user.Activated}
 
