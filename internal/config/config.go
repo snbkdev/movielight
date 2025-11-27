@@ -35,6 +35,9 @@ type Config struct {
 		Password string
 		Sender   string
 	}
+	CORS struct {
+		TrustedOrigins []string
+	}
 }
 
 // Load загружает конфигурацию из .env

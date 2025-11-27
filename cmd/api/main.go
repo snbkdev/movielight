@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log/slog"
 	"movielight/internal/config"
@@ -9,6 +10,7 @@ import (
 	"movielight/internal/mailer"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,6 +31,7 @@ type application struct {
 }
 
 func main() {
+
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
 	// загружаем конфиг
@@ -80,6 +83,11 @@ func main() {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.CORS.TrustedOrigins = strings.Fields(val)
+		return nil
+	})
 
 	// сервер
 	srv := &http.Server{

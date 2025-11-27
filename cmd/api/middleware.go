@@ -2,14 +2,15 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"movielight/internal/data"
 	"movielight/internal/validator"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
-	"strings"
 
 	"golang.org/x/time/rate"
 )
@@ -154,7 +155,7 @@ func (app *application) requireActivatedUser(next http.HandlerFunc) http.Handler
 		next.ServeHTTP(w, r)
 	})
 
-	return app.requireActivatedUser(fn)
+	return app.requireAuthenticatedUser(fn)
 }
 
 func (app *application) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
@@ -176,4 +177,54 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 	}
 
 	return app.requireActivatedUser(fn)
+}
+
+func (app *application) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Vary", "Origin")
+
+		w.Header().Add("Vary", "Access-Control-Request-Method")
+
+		origin := r.Header.Get("Origin")
+
+		if origin != "" {
+			for i := range app.config.CORS.TrustedOrigins {
+				if origin == app.config.CORS.TrustedOrigins[i] {
+					w.Header().Set("Access-Control-Allow-Oriign", origin)
+
+					if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != ""{
+						w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PUT, PATCH, DELETE")
+						w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+
+						w.WriteHeader(http.StatusOK)
+						return
+					}
+				break
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) metrics(next http.Handler) http.Handler {
+	var (
+		totalRequestsReceived = expvar.NewInt("total_requests_received")
+		totalResponsesSent = expvar.NewInt("total_responses_sent")
+		totalProcessingTimeMicroseconds = expvar.NewInt("total_processing_time_us")
+	)
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		totalRequestsReceived.Add(1)
+
+		next.ServeHTTP(w, r)
+
+		totalResponsesSent.Add(1)
+
+		duration := time.Since(start).Microseconds()
+		totalProcessingTimeMicroseconds.Add(duration)
+	})
 }
